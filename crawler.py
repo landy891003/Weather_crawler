@@ -8,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 import requests
 import pymysql
 
+#放入資料庫函式
 def putindb(number,date,fall):
     db = pymysql.connect(host="3.92.133.135",user="databaseaws",password="databaseaws",database="reservoir_project")
     cursor = db.cursor()
@@ -23,6 +24,7 @@ def putindb(number,date,fall):
 
     db.close()    
 
+#讀取測站資料
 f=open("station.csv","r",encoding= "UTF-8")
 Num=[]
 Name=[]
@@ -36,17 +38,22 @@ fulldate=dt.date()
 date=fulldate.strftime("%d")
 i=int(date)-1   #抓取今天日期-1
 
-#f=open("example.csv","w",encoding="utf-8",newline="")          #可寫入一個csv檔案檢查(本是寫2004~2020的歷史資料所用)
+
+#可寫入一個csv檔案檢查(本是寫2004~2020的歷史資料所用)
+#f=open("example.csv","w",encoding="utf-8",newline="")          
 #writer = csv.writer(f)
 for station in stations:
     list1=station.split(',')#利用,分割測站編號、名稱
     Num.append(list1[0])
     Name.append(list1[1])
-    stname=urllib.parse.quote(urllib.parse.quote(Name[n]))
+    #stname=urllib.parse.quote(urllib.parse.quote(Name[n])) #網址有失效的狀況，因此改成只抓取編號，若有需要更改，urllist的網址中stname加上stnum變數
+
+    #裝入陣列
     name = Name[n]
     stnum = Num[n]
     dateString = fulldate.strftime("%Y-%m")
-    urllist="https://e-service.cwb.gov.tw/HistoryDataQuery/MonthDataController.do?command=viewMain&station="+stnum+"&stname="+stname+"&datepicker="+dateString
+    urllist="https://e-service.cwb.gov.tw/HistoryDataQuery/MonthDataController.do?command=viewMain&station="+stnum+"&stname=&datepicker="+dateString
+    #開啟網站
     while 1:
         try:
             html = urlopen(urllist,timeout=5).read()
@@ -57,13 +64,16 @@ for station in stations:
             print(e)
         except Exception as e:
             print(e)
+    #解析網站並抓取table
     soup = BeautifulSoup(html, "html.parser")
     table = soup.findAll("table",id="MyTable")[0]
     rows = table.findAll("tr") 
+    #找到與找不到資料的狀況
     try:
         cols = rows[i+2].findAll("td")  #+2是根據網頁的td資料(第三個td才是第一筆資料處)
         rainfall=cols[21].get_text().strip()#找降雨量的欄位
         rainfall=str(rainfall)
+        #判斷資料並改寫
         if rainfall =='T':
             rainfall='0.1'
         elif rainfall=='...':
@@ -77,12 +87,14 @@ for station in stations:
         #writer.writerow(ary)    
     except:
         if(i<10):
-            csv_row = dateString+"-"+'0'+str(i),0.0
+            csv_row = dateString+"-"+'0'+str(i)
         csv_row = dateString+'-'+str(i)       
         putindb(stnum,csv_row,0.0)
         print(stnum,csv_row,0.0)    
         #ary=[stnum,name,csv_row,0.0]
         #writer.writerow(ary)
+
+    #換下個測站與計算跑過的測站數
     n=n+1
     times+=1
     print("目前已放測站:",times)
