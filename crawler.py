@@ -46,7 +46,7 @@ for station in stations:
     list1=station.split(',')#利用,分割測站編號、名稱
     Num.append(list1[0])
     Name.append(list1[1])
-    #stname=urllib.parse.quote(urllib.parse.quote(Name[n])) #網址有失效的狀況，因此改成只抓取編號，若有需要更改，urllist的網址中stname加上stnum變數
+    #stname=urllib.parse.quote(urllib.parse.quote(Name[n])) #網址有失效的狀況，因此改成只抓取編號，若有需要更改，urllist的網址中stname加上stname變數
 
     #裝入陣列
     name = Name[n]
